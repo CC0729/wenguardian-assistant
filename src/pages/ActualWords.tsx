@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -32,7 +33,7 @@ const mockQuestions = [
 ];
 
 const ActualWords = () => {
-  const { grade } = useLearning();
+  const { difficulty } = useLearning();
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
@@ -78,7 +79,7 @@ const ActualWords = () => {
 
         <h1 className="text-3xl font-bold text-ink mb-6">实词训练</h1>
         <p className="text-ink/70 mb-8">
-          当前学段：{grade === "primary" ? "小学" : grade === "junior" ? "初中" : "高中"}
+          当前难度：{difficulty === "beginner" ? "初级" : difficulty === "intermediate" ? "中级" : "高级"}
         </p>
 
         <div className="space-y-8">
