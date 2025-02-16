@@ -16,12 +16,12 @@ import { useLearning } from "@/contexts/LearningContext";
 import { useToast } from "@/hooks/use-toast";
 
 const SettingsDialog = () => {
-  const { difficulty, setDifficulty, username, setUsername } = useLearning();
+  const { grade, setGrade, username, setUsername } = useLearning();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [tempSettings, setTempSettings] = useState({
     username: username,
-    difficulty: difficulty,
+    grade: grade,
   });
 
   // 打开对话框时初始化临时设置
@@ -29,7 +29,7 @@ const SettingsDialog = () => {
     if (open) {
       setTempSettings({
         username: username,
-        difficulty: difficulty,
+        grade: grade,
       });
     }
     setOpen(open);
@@ -38,7 +38,7 @@ const SettingsDialog = () => {
   // 保存设置
   const handleSave = () => {
     setUsername(tempSettings.username);
-    setDifficulty(tempSettings.difficulty);
+    setGrade(tempSettings.grade);
     setOpen(false);
     
     toast({
@@ -74,27 +74,27 @@ const SettingsDialog = () => {
             />
           </div>
           <div className="space-y-4">
-            <Label>难度设置</Label>
+            <Label>学段设置</Label>
             <RadioGroup
-              value={tempSettings.difficulty}
+              value={tempSettings.grade}
               onValueChange={(value) => 
                 setTempSettings(prev => ({
                   ...prev,
-                  difficulty: value as "beginner" | "intermediate" | "advanced"
+                  grade: value as "primary" | "junior" | "senior"
                 }))
               }
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="beginner" id="beginner" />
-                <Label htmlFor="beginner">初级</Label>
+                <RadioGroupItem value="primary" id="primary" />
+                <Label htmlFor="primary">小学</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="intermediate" id="intermediate" />
-                <Label htmlFor="intermediate">中级</Label>
+                <RadioGroupItem value="junior" id="junior" />
+                <Label htmlFor="junior">初中</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="advanced" id="advanced" />
-                <Label htmlFor="advanced">高级</Label>
+                <RadioGroupItem value="senior" id="senior" />
+                <Label htmlFor="senior">高中</Label>
               </div>
             </RadioGroup>
           </div>
