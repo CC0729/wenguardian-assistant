@@ -16,13 +16,12 @@ import { useLearning } from "@/contexts/LearningContext";
 import { useToast } from "@/hooks/use-toast";
 
 const SettingsDialog = () => {
-  const { grade, setGrade, username, setUsername, model, setModel } = useLearning();
+  const { grade, setGrade, username, setUsername } = useLearning();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [tempSettings, setTempSettings] = useState({
     username: username,
     grade: grade,
-    model: model,
   });
 
   // 打开对话框时初始化临时设置
@@ -31,7 +30,6 @@ const SettingsDialog = () => {
       setTempSettings({
         username: username,
         grade: grade,
-        model: model,
       });
     }
     setOpen(open);
@@ -41,7 +39,6 @@ const SettingsDialog = () => {
   const handleSave = () => {
     setUsername(tempSettings.username);
     setGrade(tempSettings.grade);
-    setModel(tempSettings.model);
     setOpen(false);
     
     toast({
@@ -98,27 +95,6 @@ const SettingsDialog = () => {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="senior" id="senior" />
                 <Label htmlFor="senior">高中</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <div className="space-y-4">
-            <Label>大模型选择</Label>
-            <RadioGroup
-              value={tempSettings.model}
-              onValueChange={(value) => 
-                setTempSettings(prev => ({
-                  ...prev,
-                  model: value as ModelType
-                }))
-              }
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Pro/Qwen/Qwen2-7B-Instruct" id="qwen" />
-                <Label htmlFor="qwen">通义千问2.0</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Pro/deepseek-ai/DeepSeek-V3" id="deepseek" />
-                <Label htmlFor="deepseek">DeepSeek V3</Label>
               </div>
             </RadioGroup>
           </div>
