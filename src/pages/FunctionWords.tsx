@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useLearning } from "@/contexts/LearningContext";
+import { useToast } from "@/hooks/use-toast";
 
 const mockExercises = [
   {
@@ -24,6 +25,35 @@ const mockExercises = [
 
 const FunctionWords = () => {
   const { difficulty } = useLearning();
+  const { toast } = useToast();
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
+
+  const handleSubmit = (exerciseId: number, answer: string) => {
+    const exercise = mockExercises.find((ex) => ex.id === exerciseId);
+    if (!exercise) return;
+
+    setAnswers((prev) => ({ ...prev, [exerciseId]: answer }));
+    setSubmitted((prev) => ({ ...prev, [exerciseId]: true }));
+
+    if (answer === exercise.answer) {
+      toast({
+        description: "回答正确！",
+        className: "bg-green-500 text-white",
+      });
+    } else {
+      toast({
+        description: "答案不正确，请继续努力！",
+        className: "bg-red-500 text-white",
+      });
+    }
+  };
+
+  const getAnswerStatus = (exerciseId: number) => {
+    if (!submitted[exerciseId]) return null;
+    const exercise = mockExercises.find((ex) => ex.id === exerciseId);
+    return exercise?.answer === answers[exerciseId];
+  };
 
   return (
     <div className="min-h-screen bg-paper-light">
@@ -50,13 +80,33 @@ const FunctionWords = () => {
                 </p>
               </div>
               <div className="space-y-4">
-                <Input
-                  placeholder="请填写适当的虚词"
-                  className="max-w-xs"
-                />
+                <div className="flex gap-4">
+                  <Input
+                    placeholder="请填写适当的虚词"
+                    className="max-w-xs"
+                    value={answers[exercise.id] || ""}
+                    onChange={(e) => setAnswers((prev) => ({ ...prev, [exercise.id]: e.target.value }))}
+                    disabled={submitted[exercise.id]}
+                  />
+                  <Button
+                    onClick={() => handleSubmit(exercise.id, answers[exercise.id] || "")}
+                    disabled={submitted[exercise.id]}
+                  >
+                    提交答案
+                  </Button>
+                </div>
                 <p className="text-ink/60 text-sm">
                   提示：{exercise.hint}
                 </p>
+                {submitted[exercise.id] && (
+                  <div className={`mt-4 p-3 rounded ${
+                    getAnswerStatus(exercise.id) ? "bg-green-100" : "bg-red-100"
+                  }`}>
+                    <p className="text-ink/80">
+                      正确答案：{exercise.answer}
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           ))}

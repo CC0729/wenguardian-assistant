@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLearning } from "@/contexts/LearningContext";
+import { useToast } from "@/hooks/use-toast";
 
 const mockQuestions = [
   {
@@ -33,6 +34,38 @@ const mockQuestions = [
 
 const ActualWords = () => {
   const { difficulty } = useLearning();
+  const { toast } = useToast();
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+
+  const handleAnswer = (questionId: number, optionId: string, isCorrect: boolean) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+
+    if (isCorrect) {
+      toast({
+        description: "回答正确！",
+        className: "bg-green-500 text-white",
+      });
+    } else {
+      toast({
+        description: "答案不正确，请继续努力！",
+        className: "bg-red-500 text-white",
+      });
+    }
+  };
+
+  const getOptionStyle = (questionId: number, optionId: string, correct: boolean) => {
+    if (!answers[questionId]) return "";
+    
+    if (answers[questionId] === optionId) {
+      return correct ? "bg-green-500 text-white hover:bg-green-600" : "bg-red-500 text-white hover:bg-red-600";
+    }
+    
+    if (correct && answers[questionId]) {
+      return "bg-green-500 text-white hover:bg-green-600";
+    }
+    
+    return "";
+  };
 
   return (
     <div className="min-h-screen bg-paper-light">
@@ -65,12 +98,22 @@ const ActualWords = () => {
                   <Button
                     key={option.id}
                     variant="outline"
-                    className="justify-start h-auto py-3"
+                    className={`justify-start h-auto py-3 ${getOptionStyle(question.id, option.id, option.correct)} ${
+                      answers[question.id] ? "pointer-events-none" : ""
+                    }`}
+                    onClick={() => handleAnswer(question.id, option.id, option.correct)}
                   >
                     {option.id}. {option.text}
                   </Button>
                 ))}
               </div>
+              {answers[question.id] && (
+                <div className="mt-4 p-3 bg-paper-dark rounded">
+                  <p className="text-ink/80">
+                    {question.options.find(opt => opt.correct)?.text} 是正确答案。
+                  </p>
+                </div>
+              )}
             </Card>
           ))}
         </div>
