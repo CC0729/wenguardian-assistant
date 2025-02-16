@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-type DifficultyLevel = "beginner" | "intermediate" | "advanced";
+type GradeLevel = "elementary" | "junior" | "senior";
 
 interface LearningContextType {
-  difficulty: DifficultyLevel;
-  setDifficulty: (level: DifficultyLevel) => void;
+  grade: GradeLevel;
+  setGrade: (level: GradeLevel) => void;
   username: string;
   setUsername: (name: string) => void;
 }
@@ -12,14 +12,14 @@ interface LearningContextType {
 const LearningContext = createContext<LearningContextType | undefined>(undefined);
 
 export const LearningProvider = ({ children }: { children: ReactNode }) => {
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>("beginner");
+  const [grade, setGrade] = useState<GradeLevel>("elementary");
   const [username, setUsername] = useState<string>("");
 
   return (
     <LearningContext.Provider 
       value={{ 
-        difficulty, 
-        setDifficulty, 
+        grade, 
+        setGrade, 
         username, 
         setUsername 
       }}

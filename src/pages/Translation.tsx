@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -17,7 +16,7 @@ const mockPassages = [
 ];
 
 const Translation = () => {
-  const { difficulty } = useLearning();
+  const { grade } = useLearning();
 
   return (
     <div className="min-h-screen bg-paper-light">
@@ -31,7 +30,7 @@ const Translation = () => {
 
         <h1 className="text-3xl font-bold text-ink mb-6">翻译练习</h1>
         <p className="text-ink/70 mb-8">
-          当前难度：{difficulty === "beginner" ? "初级" : difficulty === "intermediate" ? "中级" : "高级"}
+          当前学段：{grade === "elementary" ? "小学" : grade === "junior" ? "初中" : "高中"}
         </p>
 
         <div className="space-y-8">
