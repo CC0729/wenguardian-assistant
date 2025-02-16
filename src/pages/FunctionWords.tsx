@@ -113,7 +113,7 @@ const FunctionWords = () => {
                   <h3 className="text-xl font-semibold mb-2">第{exercise.id}题</h3>
                   <p className="text-ink/80 bg-paper-dark p-4 rounded text-lg leading-loose">
                     {exercise.text.map((segment, index) => (
-                      <React.Fragment key={index}>
+                      <div key={index} className="inline">
                         {segment}
                         {index < exercise.blanks.length && (
                           <DroppableBlank
@@ -121,7 +121,7 @@ const FunctionWords = () => {
                             value={answers[exercise.blanks[index].id]}
                           />
                         )}
-                      </React.Fragment>
+                      </div>
                     ))}
                   </p>
                 </div>
