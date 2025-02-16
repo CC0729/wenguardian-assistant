@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, PartyPopper } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,11 +10,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { callLLM, type Question } from "@/services/api";
 import type { GradeLevel } from "@/contexts/LearningContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 const ActualWords = () => {
   const { grade, apiConfig } = useLearning();
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [showSummary, setShowSummary] = useState(false);
+  const [accuracy, setAccuracy] = useState(0);
+  const [username] = useState("同学");
 
   const generatePrompt = (grade: GradeLevel) => {
     return `请根据${grade === "elementary" ? "小学" : grade === "junior" ? "初中" : "高中"}学段的要求，生成5道文言文实词理解题。
@@ -70,6 +81,20 @@ const ActualWords = () => {
     },
   });
 
+  const calculateAndShowSummary = () => {
+    if (!questions) return;
+    
+    const totalQuestions = questions.length;
+    const correctAnswers = questions.reduce((count, question) => {
+      const userAnswer = answers[question.id];
+      const correctOption = question.options.find(opt => opt.correct);
+      return userAnswer === correctOption?.id ? count + 1 : count;
+    }, 0);
+    
+    setAccuracy((correctAnswers / totalQuestions) * 100);
+    setShowSummary(true);
+  };
+
   const handleAnswer = (questionId: number, optionId: string, isCorrect: boolean) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
 
@@ -83,6 +108,11 @@ const ActualWords = () => {
         description: "答案不正确，请继续努力！",
         className: "bg-red-500 text-white",
       });
+    }
+    
+    const newAnswers = { ...answers, [questionId]: optionId };
+    if (questions && Object.keys(newAnswers).length === questions.length) {
+      calculateAndShowSummary();
     }
   };
 
@@ -120,6 +150,78 @@ const ActualWords = () => {
       return () => clearInterval(interval);
     }
   }, [isLoading]);
+
+  // 修改 SummaryDialog 组件
+  const SummaryDialog = () => (
+    <Dialog open={showSummary} onOpenChange={setShowSummary}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center">训练完成！</DialogTitle>
+          <DialogDescription className="text-center text-muted-foreground">
+            让我们看看你的表现如何
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="flex flex-col items-center gap-6 py-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 260,
+              damping: 20 
+            }}
+            className="relative"
+          >
+            <div className="w-32 h-32 rounded-full bg-green-100 flex items-center justify-center">
+              <PartyPopper className="w-16 h-16 text-green-500" />
+            </div>
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, 10, -10, 0] 
+              }}
+              transition={{ 
+                duration: 0.5,
+                repeat: Infinity,
+                repeatDelay: 1
+              }}
+              className="absolute -top-2 -right-2"
+            >
+              <span className="text-2xl">🎉</span>
+            </motion.div>
+          </motion.div>
+          
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-semibold">
+              恭喜你！
+            </h3>
+            <p className="text-muted-foreground">
+              你已完成本次实词训练
+            </p>
+          </div>
+
+          <div className="w-full space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>准确率</span>
+              <span>{accuracy.toFixed(0)}%</span>
+            </div>
+            <Progress value={accuracy} className="h-2" />
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            {accuracy >= 80 ? (
+              "太棒了！你对实词的理解已经很到位了！"
+            ) : accuracy >= 60 ? (
+              "不错的表现！继续加油！"
+            ) : (
+              "再接再厉，相信你会做得更好！"
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   if (isLoading) {
     return (
@@ -181,6 +283,7 @@ const ActualWords = () => {
             ))}
           </div>
         </div>
+        <SummaryDialog />
       </div>
     );
   }
@@ -259,6 +362,7 @@ const ActualWords = () => {
             </Card>
           ))}
         </div>
+        <SummaryDialog />
       </div>
     </div>
   );
