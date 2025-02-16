@@ -8,6 +8,7 @@ import { useLearning } from "@/contexts/LearningContext";
 import { useQuery } from "@tanstack/react-query";
 import { callLLM } from "@/services/api";
 import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TranslationQuestion {
   id: number;
@@ -108,12 +109,87 @@ const Translation = () => {
     }
   };
 
+  // 添加加载状态提示数组
+  const loadingSteps = [
+    "正在连接到AI模型...",
+    "正在生成适合学段的文言文...",
+    "正在优化文本难度...",
+    "正在编写参考译文...",
+    "马上就好..."
+  ];
+
+  const [currentStep, setCurrentStep] = useState(0);
+
+  React.useEffect(() => {
+    if (isLoading) {
+      const interval = setInterval(() => {
+        setCurrentStep((prev) => (prev + 1) % loadingSteps.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoading]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-paper-light flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-ink/70">正在生成翻译题目...</p>
+      <div className="min-h-screen bg-paper-light">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <Link to="/" className="inline-flex items-center text-ink hover:text-ink/70">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              返回首页
+            </Link>
+          </div>
+
+          <h1 className="text-3xl font-bold text-ink mb-6">翻译训练</h1>
+          <p className="text-ink/70 mb-8">
+            当前学段：{grade === "elementary" ? "小学" : grade === "junior" ? "初中" : "高中"}
+          </p>
+
+          <div className="space-y-8">
+            {[1, 2, 3].map((index) => (
+              <Card key={index} className="p-6 bg-paper relative overflow-hidden">
+                <div className="mb-6">
+                  <Skeleton className="h-8 w-1/4 mb-4" />
+                  <Skeleton className="h-32 w-full mb-4" />
+                  <Skeleton className="h-40 w-full" />
+                </div>
+                
+                {/* 添加加载动画覆盖层 */}
+                <AnimatePresence>
+                  <motion.div 
+                    className="absolute inset-0 bg-paper/80 backdrop-blur-sm flex flex-col items-center justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <motion.div 
+                      className="flex items-center gap-2 text-ink/70"
+                      animate={{ scale: [1, 1.02, 1] }}
+                      transition={{ 
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>{loadingSteps[currentStep]}</span>
+                    </motion.div>
+                  </motion.div>
+                </AnimatePresence>
+              </Card>
+            ))}
+          </div>
+
+          {/* 添加底部加载提示 */}
+          <motion.div 
+            className="mt-8 text-center text-ink/60"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <p>正在为你准备适合的翻译练习题目</p>
+            <p className="text-sm mt-2">这可能需要一点时间，请耐心等待</p>
+          </motion.div>
         </div>
       </div>
     );
