@@ -18,6 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { usePoints } from "@/hooks/usePoints";
 
 const ActualWords = () => {
   const { grade, apiConfig } = useLearning();
@@ -26,6 +27,9 @@ const ActualWords = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [accuracy, setAccuracy] = useState(0);
   const [username] = useState("同学");
+  const { points, addPoints, hasEnoughPoints } = usePoints();
+  const [showInsufficientPoints, setShowInsufficientPoints] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
 
   const generatePrompt = (grade: GradeLevel) => {
     return `请根据${grade === "elementary" ? "小学" : grade === "junior" ? "初中" : "高中"}学段的要求，生成5道文言文实词理解题。
@@ -91,28 +95,43 @@ const ActualWords = () => {
       return userAnswer === correctOption?.id ? count + 1 : count;
     }, 0);
     
+    const incorrectAnswers = totalQuestions - correctAnswers;
+    const pointsEarned = (correctAnswers * 10) - (incorrectAnswers * 10);
+    setEarnedPoints(pointsEarned);
     setAccuracy((correctAnswers / totalQuestions) * 100);
     setShowSummary(true);
   };
 
   const handleAnswer = (questionId: number, optionId: string, isCorrect: boolean) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+    // 检查是否已经回答过这道题
+    if (answers[questionId]) return;
+    
+    // 检查积分是否足够
+    if (!hasEnoughPoints(10) && !isCorrect) {
+      setShowInsufficientPoints(true);
+      return;
+    }
+
+    setAnswers((prev) => {
+      const newAnswers = { ...prev, [questionId]: optionId };
+      if (questions && Object.keys(newAnswers).length === questions.length) {
+        calculateAndShowSummary();
+      }
+      return newAnswers;
+    });
 
     if (isCorrect) {
+      addPoints(10);
       toast({
-        description: "回答正确！",
+        description: "回答正确！获得10积分",
         className: "bg-green-500 text-white",
       });
     } else {
+      addPoints(-10);
       toast({
-        description: "答案不正确，请继续努力！",
+        description: "答案不正确，扣除10积分",
         className: "bg-red-500 text-white",
       });
-    }
-    
-    const newAnswers = { ...answers, [questionId]: optionId };
-    if (questions && Object.keys(newAnswers).length === questions.length) {
-      calculateAndShowSummary();
     }
   };
 
@@ -201,12 +220,21 @@ const ActualWords = () => {
             </p>
           </div>
 
-          <div className="w-full space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>准确率</span>
-              <span>{accuracy.toFixed(0)}%</span>
+          <div className="w-full space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>准确率</span>
+                <span>{accuracy.toFixed(0)}%</span>
+              </div>
+              <Progress value={accuracy} className="h-2" />
             </div>
-            <Progress value={accuracy} className="h-2" />
+            
+            <div className="flex items-center justify-between p-3 bg-paper-dark rounded">
+              <span className="text-sm font-medium">本次获得积分</span>
+              <span className={`text-lg font-bold ${earnedPoints >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {earnedPoints >= 0 ? `+${earnedPoints}` : earnedPoints}
+              </span>
+            </div>
           </div>
 
           <div className="text-center text-sm text-muted-foreground">
@@ -218,6 +246,31 @@ const ActualWords = () => {
               "再接再厉，相信你会做得更好！"
             )}
           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // 添加积分不足提示对话框
+  const InsufficientPointsDialog = () => (
+    <Dialog open={showInsufficientPoints} onOpenChange={setShowInsufficientPoints}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center">积分不足</DialogTitle>
+          <DialogDescription className="text-center text-muted-foreground">
+            你的积分余额不足以继续答题
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-4 py-4">
+          <div className="text-center space-y-2">
+            <p className="text-lg font-medium">当前积分：{points}</p>
+            <p className="text-sm text-muted-foreground">
+              每道题答错将扣除10积分
+            </p>
+          </div>
+          <Button onClick={() => setShowInsufficientPoints(false)}>
+            我知道了
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -283,6 +336,7 @@ const ActualWords = () => {
             ))}
           </div>
         </div>
+        <InsufficientPointsDialog />
         <SummaryDialog />
       </div>
     );
@@ -362,6 +416,7 @@ const ActualWords = () => {
             </Card>
           ))}
         </div>
+        <InsufficientPointsDialog />
         <SummaryDialog />
       </div>
     </div>
