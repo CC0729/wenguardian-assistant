@@ -15,8 +15,6 @@ const ActualWords = () => {
   const { grade, apiConfig } = useLearning();
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [explanations, setExplanations] = useState<Record<number, string>>({});
-  const [loadingExplanation, setLoadingExplanation] = useState<Record<number, boolean>>({});
 
   const generatePrompt = (grade: GradeLevel) => {
     return `请根据${grade === "elementary" ? "小学" : grade === "junior" ? "初中" : "高中"}学段的要求，生成5道文言文实词理解题。
@@ -24,7 +22,11 @@ const ActualWords = () => {
 1. 一个实词
 2. 包含该实词的完整语境（句子或段落）
 3. 四个选项（A、B、C、D），其中只有一个是正确答案
-4. 答案解析
+4. 详细的答案解析，包含：
+   - 该实词在文中的具体含义
+   - 为什么其他选项不正确
+   - 这个实词在古代常见的其他用法
+   - 现代汉语中相近的用法举例
 
 请按照以下 JSON 格式返回：
 {
@@ -39,7 +41,7 @@ const ActualWords = () => {
         { "id": "C", "text": "选项内容", "correct": false },
         { "id": "D", "text": "选项内容", "correct": false }
       ],
-      "explanation": "答案解析"
+      "explanation": "答案解析（包含上述四个方面）"
     }
   ]
 }`;
@@ -68,55 +70,8 @@ const ActualWords = () => {
     },
   });
 
-  const generateExplanationPrompt = (question: Question, userAnswer: string) => {
-    return `请对以下文言文实词理解题的答案进行详细解析：
-
-题目：在"${question.context}"中，"${question.word}"的含义是什么？
-
-选项：
-A. ${question.options.find(opt => opt.id === 'A')?.text}
-B. ${question.options.find(opt => opt.id === 'B')?.text}
-C. ${question.options.find(opt => opt.id === 'C')?.text}
-D. ${question.options.find(opt => opt.id === 'D')?.text}
-
-正确答案：${question.options.find(opt => opt.correct)?.text}
-学生答案：${userAnswer}
-
-请从以下几个方面进行解析：
-1. 该实词在文中的具体含义
-2. 为什么其他选项不正确
-3. 这个实词在古代常见的其他用法
-4. 现代汉语中相近的用法举例`;
-  };
-
-  const handleAnswer = async (questionId: number, optionId: string, isCorrect: boolean) => {
+  const handleAnswer = (questionId: number, optionId: string, isCorrect: boolean) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-    setLoadingExplanation((prev) => ({ ...prev, [questionId]: true }));
-
-    if (questions) {
-      const question = questions.find(q => q.id === questionId);
-      if (question) {
-        try {
-          const selectedOption = question.options.find(opt => opt.id === optionId);
-          const response = await callLLM([
-            { 
-              role: 'user', 
-              content: generateExplanationPrompt(question, selectedOption?.text || '') 
-            }
-          ], apiConfig);
-          
-          setExplanations(prev => ({ ...prev, [questionId]: response }));
-        } catch (error) {
-          console.error('获取解析失败:', error);
-          toast({
-            description: "获取解析失败，请重试",
-            variant: "destructive",
-          });
-        } finally {
-          setLoadingExplanation(prev => ({ ...prev, [questionId]: false }));
-        }
-      }
-    }
 
     if (isCorrect) {
       toast({
@@ -284,35 +239,22 @@ D. ${question.options.find(opt => opt.id === 'D')?.text}
                   </Button>
                 ))}
               </div>
-              {answers[question.id] && (
-                <div className="mt-4 p-3 bg-paper-dark rounded">
-                  <p className="text-ink/80">
-                    {question.options.find(opt => opt.correct)?.text} 是正确答案。
-                  </p>
-                </div>
-              )}
               
-              {/* 添加解析部分 */}
+              {/* 修改解析显示部分 */}
               {answers[question.id] && (
-                <div className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-6"
+                >
                   <h4 className="text-lg font-semibold mb-2">答案解析</h4>
-                  {loadingExplanation[question.id] ? (
-                    <div className="flex items-center gap-2 text-ink/70">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>正在生成解析...</span>
-                    </div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-paper-dark p-4 rounded"
-                    >
-                      <p className="text-ink/80 whitespace-pre-line">
-                        {explanations[question.id]}
-                      </p>
-                    </motion.div>
-                  )}
-                </div>
+                  <div className="bg-paper-dark p-4 rounded">
+                    <p className="text-ink/80 whitespace-pre-line">
+                      {question.explanation}
+                    </p>
+                  </div>
+                </motion.div>
               )}
             </Card>
           ))}
