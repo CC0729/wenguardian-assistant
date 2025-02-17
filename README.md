@@ -1,69 +1,21 @@
-# Welcome to your Lovable project
+# 文言文练习助手
 
-## Project info
+面向学生，提供三个模块的练习：实词、虚词以及翻译练习
 
-**URL**: https://lovable.dev/projects/5cc96115-3aef-4b5d-b45c-8d46ad7c7335
+## 实词训练
 
-## How can I edit this code?
+调用大模型API生成五道选择题，用户点选选项提交查看正确或错误以及答案的解析。
 
-There are several ways of editing your application.
+五道题目完成后，弹出卡片，展示本次正确率以及得分情况
 
-**Use Lovable**
+## 虚词训练
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5cc96115-3aef-4b5d-b45c-8d46ad7c7335) and start prompting.
+交互方式为拖拽文字的方块到题目中，完成答题；
 
-Changes made via Lovable will be committed automatically to this repo.
+当前模块待优化中
 
-**Use your preferred IDE**
+## 翻译练习
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+调用大模型生成文言文翻译题
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/5cc96115-3aef-4b5d-b45c-8d46ad7c7335) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+用户输入现代为翻译后，由AI进行评价与打分
